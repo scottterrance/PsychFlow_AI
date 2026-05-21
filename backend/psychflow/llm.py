@@ -1,33 +1,31 @@
-"""Thin wrapper around Google's Gemini API.
+"""Thin wrapper around Groq's chat completions API.
 
-Uses the free `google-genai` SDK. Get a free API key at:
-https://aistudio.google.com/apikey
+Uses the free `groq` SDK. Get a free API key at:
+https://console.groq.com/keys (sign up with any email, no credit card)
 """
 
 from __future__ import annotations
 
-import asyncio
 import os
 from functools import lru_cache
 
-from google import genai
-from google.genai import types
+from groq import AsyncGroq
 
 
 @lru_cache(maxsize=1)
-def _client() -> genai.Client:
-    api_key = os.environ.get("GEMINI_API_KEY")
+def _client() -> AsyncGroq:
+    api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "GEMINI_API_KEY is not set. Copy backend/.env.example to "
+            "GROQ_API_KEY is not set. Copy backend/.env.example to "
             "backend/.env and paste your free key from "
-            "https://aistudio.google.com/apikey"
+            "https://console.groq.com/keys"
         )
-    return genai.Client(api_key=api_key)
+    return AsyncGroq(api_key=api_key)
 
 
 def _model() -> str:
-    return os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    return os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
 async def generate(
@@ -37,27 +35,20 @@ async def generate(
     json_mode: bool = False,
     temperature: float = 0.7,
 ) -> str:
-    """Run a single Gemini call with a system prompt + user prompt.
+    """Run a single Groq chat completion with a system prompt + user prompt."""
 
-    Runs the blocking SDK call in a worker thread so the FastAPI event loop
-    stays free.
-    """
-
-    config_kwargs = {
-        "system_instruction": system_prompt,
+    kwargs: dict = {
+        "model": _model(),
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
         "temperature": temperature,
     }
     if json_mode:
-        config_kwargs["response_mime_type"] = "application/json"
+        # Groq supports OpenAI-style JSON mode. The prompt must mention "JSON"
+        # (our parser system prompt already does).
+        kwargs["response_format"] = {"type": "json_object"}
 
-    config = types.GenerateContentConfig(**config_kwargs)
-
-    def _call() -> str:
-        response = _client().models.generate_content(
-            model=_model(),
-            contents=user_prompt,
-            config=config,
-        )
-        return (response.text or "").strip()
-
-    return await asyncio.to_thread(_call)
+    response = await _client().chat.completions.create(**kwargs)
+    return (response.choices[0].message.content or "").strip()

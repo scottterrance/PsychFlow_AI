@@ -2,7 +2,7 @@
 
 A **6-agent interview prep pipeline** that turns a recruiter message + job description + resume into a complete, US-tech-interview playbook: psychological profile of your interviewer, predicted questions, witty answers, and conversation-control tactics.
 
-100% free stack — runs locally with a free Google Gemini API key.
+100% free stack — runs locally with a free [Groq](https://groq.com/) API key (any email, no Google account, no credit card).
 
 ```
 [1] Data Parser
@@ -23,8 +23,8 @@ A **6-agent interview prep pipeline** that turns a recruiter message + job descr
 
 | Layer | Tech |
 |---|---|
-| LLM | [Google Gemini 2.0 Flash](https://aistudio.google.com/) (free tier, no credit card) |
-| Backend | Python 3.10+, FastAPI, `google-genai` SDK |
+| LLM | [Groq](https://console.groq.com/) running `llama-3.3-70b-versatile` (free tier, no credit card) |
+| Backend | Python 3.10+, FastAPI, `groq` SDK |
 | Frontend | React 18, Vite, Tailwind CSS |
 | Orchestration | `asyncio` (steps 2 & 3 run in parallel; 5 & 6 run in parallel) |
 
@@ -35,7 +35,7 @@ PsychFlow_AI/
 ├── backend/
 │   ├── psychflow/
 │   │   ├── agents/         # 6 agent files (one per agent)
-│   │   ├── llm.py          # Gemini wrapper
+│   │   ├── llm.py          # Groq wrapper
 │   │   ├── pipeline.py     # orchestrates the 6 agents
 │   │   └── schemas.py      # Pydantic request/response models
 │   ├── main.py             # FastAPI app
@@ -87,11 +87,14 @@ git clone https://github.com/scottterrance/PsychFlow_AI.git
 cd PsychFlow_AI
 ```
 
-### Step 2 — Get a free Gemini API key
+### Step 2 — Get a free Groq API key
 
-1. Go to **<https://aistudio.google.com/apikey>**
-2. Sign in with your Google account
-3. Click **"Create API key"** → copy the key (no credit card required)
+1. Go to **<https://console.groq.com/keys>**
+2. Sign up with **any email address** (Yahoo, Outlook, ProtonMail, work email — anything works)
+3. Verify your email, then click **"Create API Key"** → name it anything (e.g. `psychflow`) → copy the key
+4. The key starts with `gsk_...`. **No credit card, no Google account required.**
+
+> Groq's free tier is genuinely usable for this project: huge daily token allowance and 5-10x faster output than most other providers.
 
 ### Step 3 — Set up the backend
 
@@ -119,10 +122,10 @@ cp .env.example .env       # macOS/Linux
 copy .env.example .env     # Windows
 ```
 
-Now open `backend/.env` and paste your Gemini key:
+Now open `backend/.env` and paste your Groq key:
 
 ```
-GEMINI_API_KEY=paste_your_key_here
+GROQ_API_KEY=gsk_paste_your_key_here
 ```
 
 Run the backend:
@@ -175,6 +178,8 @@ Click **Run analysis** — the 6 agents run, and the report appears below. You c
 
 ## How it works
 
+The pipeline runs **6 Groq chat completions** per analysis. Steps 2/3 and 5/6 run in parallel for speed (typical run: 5-15 seconds).
+
 | # | Agent | Input | Output |
 |---|---|---|---|
 | 1 | Data Parser | recruiter msg + JD + resume | structured JSON |
@@ -192,22 +197,37 @@ Each agent's system prompt lives in its own file under `backend/psychflow/agents
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `GEMINI_API_KEY` | — (required) | Your free Gemini key |
-| `GEMINI_MODEL` | `gemini-2.0-flash` | Override to use another free Gemini model |
+| `GROQ_API_KEY` | — (required) | Your free Groq key (starts with `gsk_`) |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Swap in any free Groq model (see options below) |
 | `ALLOWED_ORIGIN` | `http://localhost:5173` | CORS allow-list for the frontend |
+
+### Other free Groq models you can try
+
+Just change `GROQ_MODEL` in `backend/.env` and restart `uvicorn`:
+
+| Model | When to use |
+|---|---|
+| `llama-3.3-70b-versatile` | **Default** — best overall quality |
+| `llama-3.1-8b-instant` | Fastest, slightly lower quality |
+| `openai/gpt-oss-20b` | OpenAI's open model — different style |
+| `qwen/qwen3-32b` | Strong reasoning, good alternative |
+
+See the full list at <https://console.groq.com/docs/models>.
 
 ## Free-tier limits — good to know
 
-Gemini's free tier has a per-minute rate limit. One full pipeline run = **6 API calls**. If you run several in a row and hit the limit, just wait ~30 seconds and try again. See the [current limits](https://ai.google.dev/gemini-api/docs/rate-limits).
+Groq's free tier has a per-minute rate limit. One full pipeline run = **6 API calls**. If you run several runs back-to-back and hit the limit, just wait ~30-60 seconds and try again. See [current limits](https://console.groq.com/docs/rate-limits).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `GEMINI_API_KEY is not set` | Make sure `backend/.env` exists and contains your key. Restart `uvicorn`. |
+| `GROQ_API_KEY is not set` | Make sure `backend/.env` exists and contains your key. Restart `uvicorn`. |
+| `401 Unauthorized` from Groq | The key is wrong or got truncated when you pasted. Re-copy it from <https://console.groq.com/keys>. |
+| `429 Too Many Requests` | You hit the free-tier rate limit — wait ~60 seconds. |
+| `model_decommissioned` or "model not found" | Switch `GROQ_MODEL` in `backend/.env` to one from the list above. |
 | Frontend shows `Failed to fetch` | The backend isn't running, or it's on a different port. Confirm `http://localhost:8000/api/health` works. |
 | `CORS` errors in the browser console | Make sure the frontend is on `http://localhost:5173`, or update `ALLOWED_ORIGIN` in `backend/.env`. |
-| Pipeline takes very long / times out | Free Gemini can be slow at peak times. Try once more — if it still fails, switch to `gemini-2.0-flash-lite` via `GEMINI_MODEL`. |
 | `pip install` fails on Windows | Make sure you activated the venv (`.venv\Scripts\Activate.ps1`) and have Python 3.10+. |
 
 ## License

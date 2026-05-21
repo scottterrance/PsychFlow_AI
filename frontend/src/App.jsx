@@ -149,7 +149,7 @@ export default function App() {
       </main>
 
       <footer className="mx-auto max-w-5xl px-4 py-6 text-center text-xs text-slate-500">
-        Powered by Google Gemini (free tier) + FastAPI + React.
+        Powered by Groq (free tier) + FastAPI + React.
       </footer>
     </div>
   )
