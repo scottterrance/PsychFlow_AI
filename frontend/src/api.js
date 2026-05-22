@@ -7,7 +7,12 @@ export async function analyze({ recruiter_message, job_description, resume }) {
   })
   if (!res.ok) {
     const detail = await res.json().catch(() => ({}))
-    throw new Error(detail.detail || `Request failed: ${res.status}`)
+    const message = detail.detail || `Request failed: ${res.status}`
+    const error = new Error(message)
+    // Attach the HTTP status so the UI can render rate-limit (429) and
+    // server (5xx) errors differently.
+    error.status = res.status
+    throw error
   }
   return res.json()
 }

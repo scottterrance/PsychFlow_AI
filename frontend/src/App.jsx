@@ -16,12 +16,12 @@ export default function App() {
   const [jobDescription, setJobDescription] = useState('')
   const [resume, setResume] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
 
   async function onSubmit(e) {
     e.preventDefault()
-    setError('')
+    setError(null)
     setResult(null)
     setLoading(true)
     try {
@@ -32,7 +32,10 @@ export default function App() {
       })
       setResult(data)
     } catch (err) {
-      setError(err.message || 'Something went wrong.')
+      setError({
+        message: err.message || 'Something went wrong.',
+        status: err.status || 0,
+      })
     } finally {
       setLoading(false)
     }
@@ -48,6 +51,8 @@ export default function App() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  const isRateLimit = error?.status === 429
 
   return (
     <div className="min-h-screen">
@@ -100,7 +105,7 @@ export default function App() {
           </div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-slate-500">
-              Runs 6 Gemini agents. Typically 15-30 seconds.
+              Runs 6 Groq agents. Typically 15-30 seconds (longer if rate-limited).
             </p>
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Analyzing...' : 'Run analysis'}
@@ -108,10 +113,25 @@ export default function App() {
           </div>
         </form>
 
-        {error && (
+        {error && isRateLimit && (
+          <div className="card border-amber-200 bg-amber-50 text-sm text-amber-900">
+            <strong className="block mb-1">Groq rate limit hit</strong>
+            <p className="mb-2">{error.message}</p>
+            <p className="text-xs text-amber-800">
+              Tip: edit <code className="rounded bg-amber-100 px-1">backend/.env</code>{' '}
+              and set{' '}
+              <code className="rounded bg-amber-100 px-1">
+                GROQ_MODEL=llama-3.3-70b-versatile
+              </code>{' '}
+              for a smaller, faster model that stays under the limit.
+            </p>
+          </div>
+        )}
+
+        {error && !isRateLimit && (
           <div className="card border-red-200 bg-red-50 text-sm text-red-800">
             <strong className="mr-1">Error:</strong>
-            {error}
+            {error.message}
           </div>
         )}
 
