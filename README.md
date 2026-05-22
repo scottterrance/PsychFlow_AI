@@ -23,7 +23,7 @@ A **6-agent interview prep pipeline** that turns a recruiter message + job descr
 
 | Layer | Tech |
 |---|---|
-| LLM | [Groq](https://console.groq.com/) running `llama-3.3-70b-versatile` (free tier, no credit card) |
+| LLM | [Groq](https://console.groq.com/) running `openai/gpt-oss-120b` (free tier, no credit card) |
 | Backend | Python 3.10+, FastAPI, `groq` SDK |
 | Frontend | React 18, Vite, Tailwind CSS |
 | Orchestration | `asyncio` (steps 2 & 3 run in parallel; 5 & 6 run in parallel) |
@@ -198,7 +198,7 @@ Each agent's system prompt lives in its own file under `backend/psychflow/agents
 | Variable | Default | Purpose |
 |---|---|---|
 | `GROQ_API_KEY` | — (required) | Your free Groq key (starts with `gsk_`) |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Swap in any free Groq model (see options below) |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Swap in any free Groq model (see options below) |
 | `ALLOWED_ORIGIN` | `http://localhost:5173` | CORS allow-list for the frontend |
 
 ### Other free Groq models you can try
@@ -207,10 +207,11 @@ Just change `GROQ_MODEL` in `backend/.env` and restart `uvicorn`:
 
 | Model | When to use |
 |---|---|
-| `llama-3.3-70b-versatile` | **Default** — best overall quality |
-| `llama-3.1-8b-instant` | Fastest, slightly lower quality |
-| `openai/gpt-oss-20b` | OpenAI's open model — different style |
-| `qwen/qwen3-32b` | Strong reasoning, good alternative |
+| `openai/gpt-oss-120b` | **Default** — strongest free model on Groq (OpenAI's open 120B) |
+| `moonshotai/kimi-k2-instruct` | Very strong, long context |
+| `llama-3.3-70b-versatile` | Solid all-rounder, faster than 120b |
+| `qwen/qwen3-32b` | Strong reasoning |
+| `llama-3.1-8b-instant` | Fastest, lowest quality (use for quick iteration) |
 
 See the full list at <https://console.groq.com/docs/models>.
 
