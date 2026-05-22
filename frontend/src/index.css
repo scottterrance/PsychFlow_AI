@@ -6,6 +6,9 @@
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60;
   }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50;
+  }
   .label {
     @apply block text-sm font-semibold text-slate-700 mb-1;
   }
@@ -17,6 +20,7 @@
   }
 }
 
+/* Generic markdown body - used in input form (legacy paths) */
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3 {
@@ -32,3 +36,37 @@
 .markdown-body pre { @apply rounded-md bg-slate-900 text-slate-100 p-3 text-xs overflow-x-auto my-2; }
 .markdown-body pre code { @apply bg-transparent p-0; }
 .markdown-body strong { @apply font-semibold text-slate-900; }
+
+/* Sidebar markdown - compact, dense, designed for reference */
+.sidebar-markdown { @apply text-sm text-slate-700; }
+.sidebar-markdown p { @apply text-sm leading-snug mb-2; }
+.sidebar-markdown ul, .sidebar-markdown ol { @apply pl-5 space-y-1 mb-2 marker:text-slate-400; }
+.sidebar-markdown ul { @apply list-disc; }
+.sidebar-markdown ol { @apply list-decimal; }
+.sidebar-markdown li { @apply leading-snug; }
+.sidebar-markdown strong { @apply font-semibold text-slate-900; }
+.sidebar-markdown h1, .sidebar-markdown h2, .sidebar-markdown h3 {
+  @apply text-sm font-semibold text-slate-800 mt-2 mb-1;
+}
+.sidebar-markdown code { @apply rounded bg-slate-100 px-1 py-0.5 text-xs; }
+
+/* Main markdown - spacious, designed for focus on questions and answers */
+.main-markdown { @apply text-slate-800; }
+.main-markdown p { @apply text-base leading-relaxed my-3; }
+.main-markdown ul, .main-markdown ol { @apply pl-6 space-y-3 my-3 marker:text-slate-400; }
+.main-markdown ul { @apply list-disc; }
+.main-markdown ol { @apply list-decimal; }
+.main-markdown li { @apply leading-relaxed; }
+.main-markdown li > p { @apply my-1; }
+.main-markdown li ul, .main-markdown li ol { @apply mt-1 mb-1 space-y-1; }
+.main-markdown strong { @apply font-semibold text-slate-900; }
+.main-markdown h1, .main-markdown h2, .main-markdown h3 {
+  @apply font-semibold text-slate-900 mt-5 mb-2;
+}
+.main-markdown h1 { @apply text-lg; }
+.main-markdown h2 { @apply text-base; }
+.main-markdown h3 { @apply text-sm uppercase tracking-wide text-slate-600; }
+.main-markdown code { @apply rounded bg-slate-100 px-1.5 py-0.5 text-sm; }
+.main-markdown pre { @apply rounded-md bg-slate-900 text-slate-100 p-3 text-sm overflow-x-auto my-3; }
+.main-markdown pre code { @apply bg-transparent p-0; }
+
