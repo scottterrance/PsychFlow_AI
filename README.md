@@ -25,6 +25,7 @@ A **6-agent interview prep pipeline** that turns a recruiter message + job descr
 |---|---|
 | LLM | [Groq](https://console.groq.com/) running `llama-3.3-70b-versatile` (free tier, no credit card) |
 | Backend | Python 3.10+, FastAPI, `groq` SDK |
+| Web search | DuckDuckGo via [`ddgs`](https://pypi.org/project/ddgs/) (free, no API key) |
 | Frontend | React 18, Vite, Tailwind CSS |
 | Orchestration | `asyncio` (steps 2 & 3 run in parallel; 5 & 6 run in parallel) |
 
@@ -184,12 +185,23 @@ The pipeline runs **6 Groq chat completions** per analysis. Steps 2/3 and 5/6 ru
 |---|---|---|---|
 | 1 | Data Parser | recruiter msg + JD + resume | structured JSON |
 | 2 | Interviewer Psychologist | parsed data | 4-6 bullet psychology profile |
-| 3 | Company & JD Analyst | JD + company hint | top skills, values, culture clues |
-| 4 | Question Predictor | everything from 1-3 + JD + resume | 8-10 ranked questions |
+| 3 | Company & JD Analyst | JD + company hint **+ live DuckDuckGo search** | top skills, values, culture clues (grounded in recent web data) |
+| 4 | Question Predictor | everything from 1-3 + JD + resume **+ live DuckDuckGo search** | 8-10 ranked questions, with real reported ones marked `(reported)` |
 | 5 | Answer Crafter | questions + resume + JD | witty 3-5-sentence answers |
 | 6 | Airflow Strategist | everything | 4-6 conversation-control "moves" |
 
 Each agent's system prompt lives in its own file under `backend/psychflow/agents/` — tweak the prompts, restart `uvicorn`, and you're iterating.
+
+### Live web research (Agents 3 & 4)
+
+Agents 3 and 4 query DuckDuckGo at runtime to ground their output in real, current information:
+
+| Agent | Search query | What it adds |
+|---|---|---|
+| 3. Company Analyst | `{company} engineering culture recent news` | Recent funding, blog posts, cultural signals |
+| 4. Question Predictor | `"{company}" "{role}" interview questions experience` | Real reported interview questions from Glassdoor, LeetCode discuss, Reddit, etc. (marked `(reported)` in the output) |
+
+Web search is **best-effort and free**: it uses DuckDuckGo via the `ddgs` Python package (no API key, no signup). If a search fails (rate-limited, network down, or the package isn't installed), the agent silently falls back to its LLM-only behavior. Each search is also capped at 8 seconds so a slow search can't block the whole pipeline.
 
 ## Configuration
 
