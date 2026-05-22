@@ -216,7 +216,11 @@ See the full list at <https://console.groq.com/docs/models>.
 
 ## Free-tier limits — good to know
 
-Groq's free tier has a per-minute rate limit. One full pipeline run = **6 API calls**. If you run several runs back-to-back and hit the limit, just wait ~30-60 seconds and try again. See [current limits](https://console.groq.com/docs/rate-limits).
+Groq's free tier has a per-minute **tokens** limit (TPM), not just a per-minute requests limit. One full pipeline run on a larger model can briefly exceed the TPM limit if your inputs are long.
+
+**The app handles this automatically:** when a rate limit is hit, the backend waits the time Groq tells it to (e.g. ~12 seconds) and retries — up to 4 times per agent call. So a single "Run analysis" click might take a bit longer but still completes successfully.
+
+**If you hit the limit too often**, switch to a smaller model — set `GROQ_MODEL=llama-3.1-8b-instant` in `backend/.env` and restart `uvicorn`. It uses far fewer tokens and almost never hits the limit. See [Groq rate limits](https://console.groq.com/docs/rate-limits).
 
 ## Troubleshooting
 
@@ -224,7 +228,7 @@ Groq's free tier has a per-minute rate limit. One full pipeline run = **6 API ca
 |---|---|
 | `GROQ_API_KEY is not set` | Make sure `backend/.env` exists and contains your key. Restart `uvicorn`. |
 | `401 Unauthorized` from Groq | The key is wrong or got truncated when you pasted. Re-copy it from <https://console.groq.com/keys>. |
-| `429 Too Many Requests` | You hit the free-tier rate limit — wait ~60 seconds. |
+| `429 Too Many Requests` (after retries) | The app already retries automatically. If it still fails, switch to `GROQ_MODEL=llama-3.1-8b-instant` in `backend/.env`. |
 | `model_decommissioned` or "model not found" | Switch `GROQ_MODEL` in `backend/.env` to one from the list above. |
 | Frontend shows `Failed to fetch` | The backend isn't running, or it's on a different port. Confirm `http://localhost:8000/api/health` works. |
 | `CORS` errors in the browser console | Make sure the frontend is on `http://localhost:5173`, or update `ALLOWED_ORIGIN` in `backend/.env`. |
